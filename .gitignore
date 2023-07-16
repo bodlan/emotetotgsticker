@@ -3,3 +3,4 @@ gif2tgsticker/
 emotes
 __pycache__
 ffmpeg/
+*.log
