@@ -90,10 +90,16 @@ def convert_gif_webm(filepath, new_file_path):
             job = job.filter("pad", width="min(iw,512)", height=512, x="(ow-iw)/2", y="(oh-ih)/2", color="white@0")
     if "duration" in fmt:
         duration = float(fmt["duration"])
+        print("duration:", duration)
+        # Cutting first 3 seconds if over 4.5
+        if duration > 4.5:
+            job = job.trim(start=0.0, end=3.0)
+            new_file_path = new_file_path.replace("_default.", "_trimmed.")
         # Try speed up video if it's over 3 seconds
-        if duration > 3.0:
+        elif duration > 3.0:
             job = job.filter("setpts", f"({config.DEFAULT_SMART_DURATION_LIMIT}/{duration})*PTS")
     else:
+        print("No duration in fmt")
         job = job.filter("setpts", f"{config.DEFAULT_FALLBACK_PTS}*PTS")
 
     job = job.output(
@@ -127,4 +133,4 @@ def delete_file(filepath):
 
 
 if __name__ == "__main__":
-    convert_webp_gif(config.TEMP_FOLDER + "docnotL_4x.webp", config.TEMP_FOLDER + "docnotL.gif")
+    check_directories()

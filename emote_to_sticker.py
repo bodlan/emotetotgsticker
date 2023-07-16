@@ -13,7 +13,6 @@ class BaseEmote(ABC):
         self.emote_id: str = ""
         self.name: str = ""
         self.animated: bool = False
-        self.api_base_url: str = ""
         self.api_emote_url: str = ""
         self.cdn_url: str = ""
         self.cdn_file_name = ""
@@ -48,8 +47,7 @@ class BaseEmote(ABC):
 class SevenTVEmote(BaseEmote):
     def __init__(self, url, all_variants):
         super().__init__(url, all_variants)
-        self.api_base_url = "https://7tv.io/v3/"
-        self.api_emote_url = self.api_base_url + "emotes"
+        self.api_emote_url = "https://7tv.io/v3/emotes/"
         self.cdn_url = "http://cdn.7tv.app/emote/"
         self.cdn_file_name = "4x.webp"
 
@@ -57,14 +55,14 @@ class SevenTVEmote(BaseEmote):
         self.emote_id = self.url.split("/")[-1]
 
     def get_emote_details(self):
-        url = self.api_emote_url + "/" + self.emote_id
+        url = self.api_emote_url + self.emote_id
         response = requests.get(url)
         if response.status_code == 200:
             response_dict = json.loads(response.content.decode("utf-8"))
             self.name = response_dict["name"]
             self.animated = response_dict["animated"]
         else:
-            print(f"Fail to get emote name of id: {self.emote_id}. Status code: {response.status_code}")
+            print(f"Failed to get emote name of id: {self.emote_id}. Status code: {response.status_code}")
 
     def download_emote(self):
         download_url = self.cdn_url + self.emote_id + "/" + self.cdn_file_name
@@ -81,29 +79,68 @@ class SevenTVEmote(BaseEmote):
 class BetterTTVEmote(BaseEmote):
     def __init__(self, url, all_variants):
         super().__init__(url, all_variants)
+        self.api_emote_url = "https://api.betterttv.net/3/emotes/"
+        self.cdn_url = "https://cdn.betterttv.net/emote/"
+        self.cdn_file_name = "3x.webp"
 
     def get_emote_details(self):
-        pass
+        url = self.api_emote_url + self.emote_id
+        response = requests.get(url)
+        if response.status_code == 200:
+            response_dict = json.loads(response.content.decode("utf-8"))
+            self.name = response_dict["code"]
+            self.animated = response_dict["animated"]
+        else:
+            print(f"Failed to get emote name of id: {self.emote_id}. Status code: {response.status_code}")
 
     def download_emote(self):
-        pass
+        download_url = self.cdn_url + self.emote_id + "/" + self.cdn_file_name
+        self.filepath = Path(TEMP_FOLDER + self.name + "_" + self.cdn_file_name)
+        response = requests.get(download_url)
+        if response.status_code == 200:
+            with open(self.filepath, "wb") as file:
+                file.write(response.content)
+            print(f"Emote file with id {self.emote_id} downloaded successfully.")
+        else:
+            print(f"Failed to download emote file with id {self.emote_id}. Status code:", response.status_code)
 
     def get_emote_id(self):
-        pass
+        self.emote_id = self.url.split("/")[-1]
 
 
 class FrankFaseZEmote(BaseEmote):
     def __init__(self, url, all_variants):
         super().__init__(url, all_variants)
+        self.api_emote_url = "https://api.frankerfacez.com/v2/emote/"
+        self.cdn_url = "https://cdn.frankerfacez.com/emote/"
+        self.cdn_file_name = ""
 
     def get_emote_details(self):
-        pass
+        url = self.api_emote_url + self.emote_id
+        response = requests.get(url)
+        if response.status_code == 200:
+            response_dict = json.loads(response.content.decode("utf-8"))
+            self.name = response_dict["emote"]["name"]
+            self.animated = response_dict["emote"]["animated"]
+        else:
+            print(f"Failed to get emote name of id: {self.emote_id}. Status code: {response.status_code}")
 
     def download_emote(self):
-        pass
+        if self.animated:
+            download_url = self.cdn_url + self.emote_id + "/animated/4"
+        else:
+            download_url = self.cdn_url + self.emote_id + "/4"
+        self.filepath = Path(TEMP_FOLDER + self.name + ".webp")
+        response = requests.get(download_url)
+        if response.status_code == 200:
+            with open(self.filepath, "wb") as file:
+                file.write(response.content)
+            print(f"Emote file with id {self.emote_id} downloaded successfully.")
+        else:
+            print(f"Failed to download emote file with id {self.emote_id}. Status code:", response.status_code)
 
     def get_emote_id(self):
-        pass
+        self.emote_id = self.url.split("/")[-1].split("-")[0]
 
 
 def main():
@@ -134,8 +171,10 @@ def main():
             print(f"Exception caught while processing {url}:", e)
 
 
-# TODO: update on bttv and ffz emotes
+# TODO: update scaling of animated emotes to appropriate w:h ratio (current any(512:200))
+# TODO: add poetry
 # TODO: update calling with args
+# TODO: add loading bar
 if __name__ == "__main__":
     if sys.argv:
         print(sys.argv)
