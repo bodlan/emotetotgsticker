@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "telegram-stickers"
+version = "0.1.0"
+description = "From Twitch emotes to telegram stickers"
+authors = ["bodlan <bodlankokidko@gmail.com>"]
+packages = [{include = "telegram_stickers"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+ffmpeg_python = "0.2.0"
+Pillow = "10.0.0"
+Requests = "2.31.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
